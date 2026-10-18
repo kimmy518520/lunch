@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>班級美食調查局 🍽️ 31人座號聚餐喜好統計</title>
+  <meta name="description" content="專為31人班級打造的聚餐美食喜好調查網站，支援座號填寫、飲食忌口備忘、即時人氣排行與LINE一鍵複製分享。">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-theme="dark">
+  <!-- 背景流體光暈裝飾 -->
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <!-- 頂部導航列 -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="logo-area">
+        <div class="logo-icon">🍽️</div>
+        <div>
+          <h1 class="logo-title">班級美食調查局</h1>
+          <p class="logo-subtitle">全班 31 位同學座號聚餐喜好大調查</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="themeToggleBtn" class="btn btn-icon" title="切換深淺色模式" aria-label="切換主題">
+          <span class="theme-icon">🌙</span>
+        </button>
+        <button id="mobileQrBtn" class="btn btn-secondary btn-sm" title="手機掃描 QR Code 即可連線使用">
+          <span>📱 手機連線 QR</span>
+        </button>
+        <button id="quickFillSampleBtn" class="btn btn-secondary btn-sm" title="一鍵自動填入展示範例資料方便預覽">
+          <span>✨ 填入展示範例</span>
+        </button>
+        <button id="exportCsvBtn" class="btn btn-secondary btn-sm" title="匯出 Excel 相容的 CSV 表格">
+          <span>📥 匯出 CSV</span>
+        </button>
+        <button id="copyLineBtn" class="btn btn-primary btn-sm" title="一鍵複製格式化文字傳到 LINE 或 Discord 班群">
+          <span>📋 複製 LINE 清單</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <!-- 頂部即時進度總覽看板 -->
+    <section class="stats-hero card">
+      <div class="hero-header">
+        <div>
+          <h2 class="hero-title">填寫進度統計</h2>
+          <p class="hero-desc">點選下方任一「座號卡片」即可立即填寫或修改喜愛的美食！</p>
+        </div>
+        <div class="progress-pill">
+          <span id="progressPercent">0%</span> 完成度
+        </div>
+      </div>
+
+      <!-- 進度條 -->
+      <div class="progress-bar-container">
+        <div class="progress-bar-fill" id="progressBarFill" style="width: 0%;"></div>
+      </div>
+
+      <!-- 統計數據方塊 -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon-wrap" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">👥</div>
+          <div>
+            <div class="stat-label">應填人數</div>
+            <div class="stat-value">31 <small>人</small></div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon-wrap" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">✅</div>
+          <div>
+            <div class="stat-label">已完成填寫</div>
+            <div class="stat-value"><span id="filledCount">0</span> <small>人</small></div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon-wrap" style="background: rgba(239, 68, 68, 0.15); color: #ef4444;">⏳</div>
+          <div>
+            <div class="stat-label">尚待填寫</div>
+            <div class="stat-value"><span id="unfilledCount">31</span> <small>人</small></div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon-wrap" style="background: rgba(99, 102, 241, 0.15); color: #6366f1;">👑</div>
+          <div>
+            <div class="stat-label">全班最愛第一名</div>
+            <div class="stat-value stat-top-food" id="topFoodName">統計中...</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 分頁選單或切換標籤 -->
+    <div class="tabs-nav">
+      <button class="tab-btn active" data-tab="seats-view">
+        <span>🪑 31 人座號總覽</span>
+        <span class="badge" id="tabSeatBadge">31</span>
+      </button>
+      <button class="tab-btn" data-tab="analytics-view">
+        <span>📊 美食排行榜與忌口</span>
+      </button>
+      <button class="tab-btn" data-tab="wheel-view">
+        <span>🎡 今天吃什麼？隨機轉盤</span>
+      </button>
+    </div>
+
+    <!-- 視圖 1: 31人座號卡片清單 -->
+    <section id="seats-view" class="tab-content active">
+      <!-- 篩選與搜尋工具列 -->
+      <div class="filter-toolbar">
+        <div class="filter-chips">
+          <button class="chip active" data-filter="all">全部 (31)</button>
+          <button class="chip" data-filter="filled">已填寫 (<span id="chipFilled">0</span>)</button>
+          <button class="chip" data-filter="unfilled">未填寫 (<span id="chipUnfilled">31</span>)</button>
+        </div>
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="searchInput" placeholder="搜尋座號、姓名或食物關鍵字...">
+          <button id="clearSearchBtn" class="clear-search-btn" title="清除搜尋" style="display:none;">✕</button>
+        </div>
+      </div>
+
+      <!-- 31 個座號的響應式網格 -->
+      <div class="seats-grid" id="seatsGridContainer">
+        <!-- 由 JavaScript 動態生成 1 ~ 31 號卡片 -->
+      </div>
+    </section>
+
+    <!-- 視圖 2: 排行榜與飲食忌口統計 -->
+    <section id="analytics-view" class="tab-content">
+      <div class="analytics-layout">
+        <!-- 美食排行榜 -->
+        <div class="card analytics-card">
+          <div class="card-header">
+            <h3>🔥 最想吃的美食排行榜 Top 10</h3>
+            <span class="card-tag">人氣料理推薦</span>
+          </div>
+          <p class="analytics-subtitle">統整全班 31 位同學最想吃或喜愛的美食類型</p>
+          <div id="foodRankingsContainer" class="rankings-list">
+            <!-- 動態生成排行榜 -->
+          </div>
+        </div>
+
+        <!-- 聚餐忌口與訂位備註 -->
+        <div class="card analytics-card">
+          <div class="card-header">
+            <h3>⚠️ 聚餐飲食禁忌與注意事項</h3>
+            <span class="card-tag alert-tag">訂位必讀</span>
+          </div>
+          <p class="analytics-subtitle">方便班長、康樂股長或主辦同學在餐廳訂位時備註</p>
+          <div id="dietaryRestrictionsContainer" class="dietary-list">
+            <!-- 動態生成飲食禁忌 -->
+          </div>
+
+          <div class="recommendations-box">
+            <h4>💡 同學推薦的口袋店家名單</h4>
+            <div id="recommendationsList" class="recommendations-chips">
+              <span class="empty-hint">尚無同學提供推薦店家</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 視圖 3: 隨機幸運美食大轉盤 -->
+    <section id="wheel-view" class="tab-content">
+      <div class="card wheel-container">
+        <div class="wheel-header text-center">
+          <h3>🎡 聚餐吃什麼？命運大轉盤</h3>
+          <p>大家意見分歧猶豫不決時，直接讓轉盤決定聚餐目的地！</p>
+        </div>
+
+        <div class="wheel-stage">
+          <div class="wheel-pointer">▼</div>
+          <canvas id="wheelCanvas" width="420" height="420"></canvas>
+        </div>
+
+        <div class="wheel-actions text-center">
+          <button id="spinWheelBtn" class="btn btn-primary btn-lg">
+            <span>🎲 開始旋轉抽籤！</span>
+          </button>
+          <div id="wheelResult" class="wheel-result-banner" style="display: none;">
+            <span>🎉 命運的決定是：<strong id="wheelResultText">麻辣火鍋</strong>！</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 填寫/修改喜好 彈窗 Modal -->
+  <div class="modal-backdrop" id="entryModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <span class="modal-badge">座號 <span id="modalSeatNumber">1</span></span>
+          <h3 id="modalTitle">填寫美食喜好</h3>
+        </div>
+        <button class="modal-close-btn" id="closeModalBtn" aria-label="關閉視窗">✕</button>
+      </div>
+
+      <form id="seatForm" class="modal-form">
+        <input type="hidden" id="formSeatNumber" value="1">
+
+        <!-- 座號切換快捷列 -->
+        <div class="form-group">
+          <label for="seatSelector">快速切換座號 (1 ~ 31 號)</label>
+          <select id="seatSelector" class="form-control">
+            <!-- 1 ~ 31 選項由 JS 生成 -->
+          </select>
+        </div>
+
+        <!-- 姓名/暱稱 -->
+        <div class="form-group">
+          <label for="studentName">姓名 / 暱稱 <span class="text-muted">(選填)</span></label>
+          <input type="text" id="studentName" class="form-control" placeholder="例如：小明、陳同學、班長..." maxlength="20">
+        </div>
+
+        <!-- 喜歡吃的食物 -->
+        <div class="form-group">
+          <label for="favoriteFood">最想吃的美食 / 料理類型 <span class="text-required">*必填</span></label>
+          <input type="text" id="favoriteFood" class="form-control" placeholder="例如：麻辣火鍋、炙燒牛排、和牛燒肉、拉麵..." required maxlength="60">
+          
+          <!-- 熱門美食標籤快速點選 -->
+          <div class="quick-tags-label">快速點選加入想吃的料理：</div>
+          <div class="quick-tags-group" id="foodQuickTags">
+            <button type="button" class="tag-btn" data-food="麻辣火鍋">🍲 麻辣火鍋</button>
+            <button type="button" class="tag-btn" data-food="日式燒肉">🥩 日式燒肉</button>
+            <button type="button" class="tag-btn" data-food="壽司日料">🍣 壽司日料</button>
+            <button type="button" class="tag-btn" data-food="豚骨拉麵">🍜 豚骨拉麵</button>
+            <button type="button" class="tag-btn" data-food="義大利麵">🍝 義大利麵</button>
+            <button type="button" class="tag-btn" data-food="美式漢堡">🍔 美式漢堡</button>
+            <button type="button" class="tag-btn" data-food="韓式炸雞">🍗 韓式炸雞</button>
+            <button type="button" class="tag-btn" data-food="窯烤披薩">🍕 窯烤披薩</button>
+            <button type="button" class="tag-btn" data-food="精緻甜點">🍰 甜點下午茶</button>
+            <button type="button" class="tag-btn" data-food="泰式料理">🥘 泰式料理</button>
+            <button type="button" class="tag-btn" data-food="港式飲茶">🥟 港式飲茶</button>
+            <button type="button" class="tag-btn" data-food="吃到飽百匯">🍱 吃到飽Buffet</button>
+          </div>
+        </div>
+
+        <!-- 飲食偏好與忌口 -->
+        <div class="form-group">
+          <label>飲食禁忌與注意事項 <span class="text-muted">(可複選，方便餐廳訂位備註)</span></label>
+          <div class="dietary-checkboxes">
+            <label class="custom-checkbox">
+              <input type="checkbox" name="diet" value="素食(全素/蛋奶素)">
+              <span>🥦 素食者</span>
+            </label>
+            <label class="custom-checkbox">
+              <input type="checkbox" name="diet" value="不吃牛">
+              <span>🚫 不吃牛</span>
+            </label>
+            <label class="custom-checkbox">
+              <input type="checkbox" name="diet" value="不吃豬">
+              <span>🚫 不吃豬</span>
+            </label>
+            <label class="custom-checkbox">
+              <input type="checkbox" name="diet" value="不吃辣">
+              <span>🌶️ 不吃辣</span>
+            </label>
+            <label class="custom-checkbox">
+              <input type="checkbox" name="diet" value="海鮮過敏">
+              <span>🦐 海鮮過敏</span>
+            </label>
+            <label class="custom-checkbox">
+              <input type="checkbox" name="diet" value="甲殼/花生過敏">
+              <span>🥜 過敏體質</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- 推薦店家 / 備註 -->
+        <div class="form-group">
+          <label for="restaurantNote">推薦的口袋店家或備註 <span class="text-muted">(選填)</span></label>
+          <input type="text" id="restaurantNote" class="form-control" placeholder="例如：海底撈、屋馬燒肉、學校附近的早午餐..." maxlength="50">
+        </div>
+
+        <!-- 按鈕群 -->
+        <div class="modal-footer">
+          <button type="button" id="clearSeatBtn" class="btn btn-ghost text-danger">清空此座號</button>
+          <div class="modal-btn-right">
+            <button type="button" class="btn btn-secondary" id="cancelModalBtn">取消</button>
+            <button type="submit" class="btn btn-primary">儲存喜好 ✅</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 手機連線 QR Code Modal -->
+  <div class="modal-backdrop" id="mobileQrModal" role="dialog" aria-modal="true" aria-labelledby="qrModalTitle">
+    <div class="modal-card text-center" style="max-width: 440px;">
+      <div class="modal-header">
+        <div>
+          <span class="modal-badge">手機瀏覽</span>
+          <h3 id="qrModalTitle">📱 用手機開啟網站</h3>
+        </div>
+        <button class="modal-close-btn" id="closeQrModalBtn" aria-label="關閉視窗">✕</button>
+      </div>
+      <div class="qr-modal-body" style="padding: 1.25rem 0;">
+        <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1rem;">
+          拿起手機打開相機，直接掃描下方 QR Code 即可連線：
+        </p>
+        
+        <div class="qr-code-wrapper" style="background: #ffffff; padding: 1rem; border-radius: var(--radius-md); display: inline-block; box-shadow: var(--shadow-md); margin-bottom: 1rem;">
+          <img id="qrCodeImage" src="" alt="手機連線 QR Code" width="220" height="220" style="display: block; border-radius: 4px;">
+        </div>
+
+        <div style="background: var(--bg-subtle); padding: 0.75rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); margin-bottom: 1rem;">
+          <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.25rem;">手機瀏覽器直接輸入網址：</div>
+          <div id="mobileUrlDisplay" style="font-size: 1.05rem; font-weight: 700; color: var(--primary); font-family: monospace; word-break: break-all;">
+            http://192.168.1.120:8080
+          </div>
+        </div>
+
+        <div class="wifi-tip-box" style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; text-align: left; background: var(--primary-light); padding: 0.75rem; border-radius: var(--radius-sm); border: 1px solid var(--primary-glow);">
+          💡 <strong>連線小提醒</strong>：<br>
+          • 確保您的手機與這台電腦連接在<strong>同一個 Wi-Fi 網路</strong>（或由手機開熱點給電腦）。<br>
+          • 若要讓<strong>全班同學在各自家裡/手機用 4G/LINE</strong> 填寫，也可以將專案拖曳到 Netlify Drop 免費秒變公開網址！
+        </div>
+      </div>
+      <div class="modal-footer" style="justify-content: flex-end;">
+        <button type="button" class="btn btn-secondary" id="cancelQrModalBtn">關閉</button>
+        <button type="button" class="btn btn-primary" id="copyMobileUrlBtn">📋 複製手機網址</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LINE 分享預覽 Modal -->
+  <div class="modal-backdrop" id="lineShareModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <span class="modal-badge">一鍵複製</span>
+          <h3>📋 複製全班聚餐美食喜好清單</h3>
+        </div>
+        <button class="modal-close-btn" id="closeLineModalBtn">✕</button>
+      </div>
+      <div class="share-modal-body">
+        <p class="text-muted">已為您排版好整潔格式，點擊下方按鈕即可複製並直接貼到 LINE / Discord 班群：</p>
+        <textarea id="lineShareText" class="share-textarea" readonly></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="cancelLineModalBtn">關閉</button>
+        <button type="button" class="btn btn-primary" id="confirmCopyLineBtn">📋 一鍵複製到剪貼簿</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 浮動提示 Toast -->
+  <div id="toast" class="toast-notification">
+    <span id="toastIcon">✅</span>
+    <span id="toastMessage">已成功儲存！</span>
+  </div>
+
+  <!-- 頁腳 -->
+  <footer class="app-footer">
+    <div class="footer-container">
+      <p>班級美食調查局 © 專為 31 位同學訂位與聚餐設計 ｜ 所有資料自動儲存於此瀏覽器</p>
+      <div class="footer-links">
+        <button id="resetAllDataBtn" class="link-btn text-danger">⚠️ 重設所有 31 人資料</button>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
